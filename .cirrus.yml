@@ -1,0 +1,34 @@
+task:
+  name: "Rom Builder"
+  timeout_in: 240m  
+  container:
+      image: marvelmathesh/docker:rom
+      cpu: 8
+      memory: 32G
+
+  Sync_script:
+      - echo "============================"
+      - echo "Syncing The Sources..."
+      - echo  "============================"
+      - cd ~
+      - mkdir rom
+      - cd rom
+      - repo init --depth=1 --no-repo-verify -u ://github.com/ProjectSakura/android.git -b 12 -g default,-mips,-darwin,-notdefault
+      - git clone https://github.com/PrajjuS/local_manifest_vince --depth 1 -b sakura-12 .repo/local_manifests
+      - repo sync -c --no-clone-bundle --no-tags --optimized-fetch --prune --force-sync -j8
+      - echo "============================"
+      - echo "Syncing Complete!"
+      - echo "============================"
+
+  Build_script:
+      - echo "============================"
+      - echo "Starting the Build..."
+      - echo "============================"
+      - cd ~
+      - cd rom
+      - source build/envsetup.sh
+      - lunch lineage_vince-userdebug
+      - export SELINUX_IGNORE_NEVERALLOWS=true
+      - mka sepolicy
+      - mka bootimage
+      - mka init
